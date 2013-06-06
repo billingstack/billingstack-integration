@@ -1,0 +1,7 @@
+# We don't want to install deps for OS stuff....
+ENABLED_SERVICES="
+-nova
+-glance
+-keystone
+-quantum
+"
