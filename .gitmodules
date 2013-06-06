@@ -1,3 +1,3 @@
 [submodule "devstack"]
 	path = devstack
-	url = git://git@github.com/openstack-dev/devstack.git
+	url = git://github.com/openstack-dev/devstack.git
