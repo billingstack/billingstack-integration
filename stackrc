@@ -1,5 +1,5 @@
 # We don't want to install deps for OS stuff....
-ENABLED_SERVICES="
+export ENABLED_SERVICES="
 -nova
 -glance
 -keystone

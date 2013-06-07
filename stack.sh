@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 SCRIPT_DIR=$(cd $(dirname $0) && pwd)
 TOP_DIR=$SCRIPT_DIR/devstack
 
@@ -58,7 +60,7 @@ GetDistro
 # DevStack distributes ``stackrc`` which contains locations for the OpenStack
 # repositories, branches to configure, and other configuration defaults.
 # ``stackrc`` sources ``localrc`` to allow you to safely override those settings.
-load_sources $TOP_DIR/stackrc
+load_sources $TOP_DIR/stackrc $SCRIPT_DIR/stackrc
 
 
 # Local Settings
