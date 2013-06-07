@@ -14,7 +14,7 @@ BS_DIR="$DEST/billingstack"
 function configure_bs() {
     setup_develop $BS_DIR
 
-    for pgp in $(echo ENABLED_PGP | tr ',' ' '); do
+    for pgp in $(echo $ENABLED_PGP | tr ',' ' '); do
         setup_develop  $DEST/billingstack-$pgp
     done
 
@@ -55,7 +55,7 @@ function init_bs() {
 function install_bs() {
     git_clone $BS_REPO $BS_DIR $BS_BRANCH
 
-    for pgp in $(echo ENABLED_PGP | tr ',' ' '); do
+    for pgp in $(echo $ENABLED_PGP | tr ',' ' '); do
         git_clone http://github.com/billingstack/billingstack-$pgp $DEST/billingstack-$pgp
     done
 }
