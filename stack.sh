@@ -218,6 +218,13 @@ SERVICE_TIMEOUT=${SERVICE_TIMEOUT:-60}
 PBR_DIR=$DEST/pbr
 
 
+# Configure Projects
+# ==================
+
+# Get project function libraries
+source $TOP_DIR/lib/tls
+
+
 # Interactive Configuration
 # -------------------------
 
@@ -446,6 +453,128 @@ source $TOP_DIR/tools/install_prereqs.sh
 
 install_rpc_backend
 
+echo "$DATABASE_BACKENDS"
 if is_service_enabled $DATABASE_BACKENDS; then
     install_database
 fi
+
+
+TRACK_DEPENDS=${TRACK_DEPENDS:-False}
+
+# Install python packages into a virtualenv so that we can track them
+if [[ $TRACK_DEPENDS = True ]]; then
+    echo_summary "Installing Python packages into a virtualenv $DEST/.venv"
+    install_package python-virtualenv
+
+    rm -rf $DEST/.venv
+    virtualenv --system-site-packages $DEST/.venv
+    source $DEST/.venv/bin/activate
+    $DEST/.venv/bin/pip freeze > $DEST/requires-pre-pip
+fi
+
+
+
+echo_summary "Installing BS"
+
+# Install pbr
+git_clone $PBR_REPO $PBR_DIR $PBR_BRANCH
+setup_develop $PBR_DIR
+
+
+
+if [[ $TRACK_DEPENDS = True ]]; then
+    $DEST/.venv/bin/pip freeze > $DEST/requires-post-pip
+    if ! diff -Nru $DEST/requires-pre-pip $DEST/requires-post-pip > $DEST/requires.diff; then
+        cat $DEST/requires.diff
+    fi
+    echo "Ran stack.sh in depend tracking mode, bailing out now"
+    exit 0
+fi
+
+
+# Syslog
+# ------
+
+if [[ $SYSLOG != "False" ]]; then
+    if [[ "$SYSLOG_HOST" = "$HOST_IP" ]]; then
+        # Configure the master host to receive
+        cat <<EOF >/tmp/90-stack-m.conf
+\$ModLoad imrelp
+\$InputRELPServerRun $SYSLOG_PORT
+EOF
+        sudo mv /tmp/90-stack-m.conf /etc/rsyslog.d
+    else
+        # Set rsyslog to send to remote host
+        cat <<EOF >/tmp/90-stack-s.conf
+*.*		:omrelp:$SYSLOG_HOST:$SYSLOG_PORT
+EOF
+        sudo mv /tmp/90-stack-s.conf /etc/rsyslog.d
+    fi
+
+    RSYSLOGCONF="/etc/rsyslog.conf"
+    if [ -f $RSYSLOGCONF ]; then
+        sudo cp -b $RSYSLOGCONF $RSYSLOGCONF.bak
+        if [[ $(grep '$SystemLogRateLimitBurst' $RSYSLOGCONF)  ]]; then
+            sudo sed -i 's/$SystemLogRateLimitBurst\ .*/$SystemLogRateLimitBurst\ 0/' $RSYSLOGCONF
+        else
+            sudo sed -i '$ i $SystemLogRateLimitBurst\ 0' $RSYSLOGCONF
+        fi
+        if [[ $(grep '$SystemLogRateLimitInterval' $RSYSLOGCONF)  ]]; then
+            sudo sed -i 's/$SystemLogRateLimitInterval\ .*/$SystemLogRateLimitInterval\ 0/' $RSYSLOGCONF
+        else
+            sudo sed -i '$ i $SystemLogRateLimitInterval\ 0' $RSYSLOGCONF
+        fi
+    fi
+
+    echo_summary "Starting rsyslog"
+    restart_service rsyslog
+fi
+
+
+# Finalize queue installation
+# ----------------------------
+restart_rpc_backend
+
+
+# Configure database
+# ------------------
+
+if is_service_enabled $DATABASE_BACKENDS; then
+    configure_database
+fi
+
+
+# Initialize the directory for service status check
+init_service_check
+
+
+if is_service_enabled zeromq; then
+    echo_summary "Starting zermomq receiver"
+    screen_it zeromq "cd $NOVA_DIR && $NOVA_BIN_DIR/nova-rpc-zmq-receiver"
+fi
+
+
+service_check
+
+
+# Fin
+# ===
+
+set +o xtrace
+
+if [[ -n "$LOGFILE" ]]; then
+    exec 1>&3
+    # Force all output to stdout and logs now
+    exec 1> >( tee -a "${LOGFILE}" ) 2>&1
+else
+    # Force all output to stdout now
+    exec 1>&3
+fi
+
+
+# Using the cloud
+# ---------------
+
+echo ""
+echo ""
+echo ""
