@@ -223,6 +223,7 @@ PBR_DIR=$DEST/pbr
 
 # Get project function libraries
 source $TOP_DIR/lib/tls
+source $SCRIPT_DIR/billingstack
 
 
 # Interactive Configuration
@@ -481,6 +482,11 @@ git_clone $PBR_REPO $PBR_DIR $PBR_BRANCH
 setup_develop $PBR_DIR
 
 
+if is_service_enabled billingstack; then
+    install_bs
+    configure_bs
+fi
+
 
 if [[ $TRACK_DEPENDS = True ]]; then
     $DEST/.venv/bin/pip freeze > $DEST/requires-post-pip
@@ -552,6 +558,23 @@ if is_service_enabled zeromq; then
     echo_summary "Starting zermomq receiver"
     screen_it zeromq "cd $NOVA_DIR && $NOVA_BIN_DIR/nova-rpc-zmq-receiver"
 fi
+
+
+if is_service_enabled billingstack; then
+    echo_summary "Configuring BS"
+    init_bs
+    echo_summary "Starting BS"
+    start_bs
+fi
+
+
+# Save some values we generated for later use
+CURRENT_RUN_TIME=$(date "+$TIMESTAMP_FORMAT")
+echo "# $CURRENT_RUN_TIME" >$TOP_DIR/.stackenv
+for i in BASE_SQL_CONN ENABLED_SERVICES HOST_IP LOGFILE \
+      SERVICE_HOST SERVICE_PROTOCOL STACK_USER TLS_IP; do
+    echo $i=${!i} >>$TOP_DIR/.stackenv
+done
 
 
 service_check

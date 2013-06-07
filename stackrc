@@ -1,2 +1,7 @@
 # We don't want to install deps for OS stuff....
 export ENABLED_SERVICES="-nova,-glance,-keystone,-quantum,mysql,rabbit,bs-central,bs-ap,bs-central,bs-api"
+export DEST=/opt/billingstack
+export BS_REPO=git://github.com/stackforge/billingstack
+export BS_BRANCH=master
+export BS_DIR=$DEST/billingstack
+export ENABLED_PGPS='braintree'

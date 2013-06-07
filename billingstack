@@ -1,0 +1,76 @@
+# Save trace setting
+XTRACE=$(set +o | grep xtrace)
+set +o xtrace
+
+
+# Defaults
+# --------
+
+# Setup directories
+BS_DIR="$DEST/billingstack"
+
+
+# Functions
+function configure_bs() {
+    setup_develop $BS_DIR
+
+    for pgp in $(echo ENABLED_PGP | tr ',' ' '); do
+        setup_develop  $DEST/billingstack-$pgp
+    done
+
+    BS_CONF_DIR=/etc/billingstack
+    if [[ ! -d $BS_CONF_DIR ]]; then
+        sudo mkdir $BS_CONF_DIR
+    fi
+    sudo chown $STACK_USER $BS_CONF_DIR
+
+    BS_CONF_FILE=$BS_CONF_DIR/billingstack.conf
+    BS_API_PASTE_FILE=$BS_CONF_DIR/api-paste.ini
+    BS_POLICY_FILE=$BS_CONF_DIR/policy.json
+
+    cp $BS_DIR/etc/billingstack/billingstack.conf.sample $BS_CONF_FILE
+    cp $BS_DIR/etc/billingstack/api-paste.ini.sample $BS_API_PASTE_FILE
+    cp $BS_DIR/etc/billingstack/policy.json $BS_POLICY_FILE
+
+    iniset $BS_CONF_FILE DEFAULT debug True
+
+    iniset $BS_CONF_FILE DEFAULT sql_connection `database_connection_url billingstack`
+
+    iniset_rpc_backend billingstack $BS_CONF_FILE DEFAULT
+}
+
+
+function init_bs() {
+    recreate_database billingstack utf8
+    python $BS_DIR/tools/resync_billingstack.py
+    python $BS_DIR/tools/resync_rater.py
+    python $BS_DIR/tools/resync_biller.py
+    python $BS_DIR/tools/resync_collector.py
+    python $BS_DIR/tools/load_samples.py
+
+    $BS_DIR/bin/billingstack-manage pg-register
+}
+
+
+function install_bs() {
+    git_clone $BS_REPO $BS_DIR $BS_BRANCH
+
+    for pgp in $(echo ENABLED_PGP | tr ',' ' '); do
+        git_clone http://github.com/billingstack/billingstack-$pgp $DEST/billingstack-$pgp
+    done
+}
+
+
+function start_bs() {
+}
+
+
+function stop_bs() {
+}
+
+# Restore xtrace
+# $XTRACE
+#
+# # Local variables:
+# # mode: shell-script
+# # End:
