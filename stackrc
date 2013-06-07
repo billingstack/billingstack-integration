@@ -1,7 +1,2 @@
 # We don't want to install deps for OS stuff....
-export ENABLED_SERVICES="
--nova
--glance
--keystone
--quantum
-"
+export ENABLED_SERVICES="-nova,-glance,-keystone,-quantum,mysql,rabbit,bs-central,bs-ap,bs-central,bs-api"
