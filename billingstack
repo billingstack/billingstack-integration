@@ -13,6 +13,7 @@ BS_DIR="$DEST/billingstack"
 # Functions
 function configure_bs() {
     setup_develop $BS_DIR
+    pip install -r $BS_DIR/tools/pip-options
 
     for pgp in $(echo $ENABLED_PGP | tr ',' ' '); do
         setup_develop  $DEST/billingstack-$pgp
