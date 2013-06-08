@@ -63,6 +63,9 @@ GetDistro
 load_sources $TOP_DIR/stackrc $SCRIPT_DIR/stackrc
 
 
+echo "python-dev" >> $TOP_DIR/files/apts/billingstack
+
+
 # Local Settings
 # --------------
 
