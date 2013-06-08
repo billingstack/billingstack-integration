@@ -63,11 +63,14 @@ function install_bs() {
 
 
 function start_bs() {
+    export BASE_DIR=$DEST
+    export CONFIG=/etc/billingstack/billingstack.conf
     $BS_DIR/tools/control.sh start all
 }
 
 
 function stop_bs() {
+    export BASE_DIR=$DEST
     $BS_DIR/tools/control.sh stop all
 }
 
