@@ -63,10 +63,12 @@ function install_bs() {
 
 
 function start_bs() {
+    $BS_DIR/tools/control.sh start all
 }
 
 
 function stop_bs() {
+    $BS_DIR/tools/control.sh stop all
 }
 
 # Restore xtrace
