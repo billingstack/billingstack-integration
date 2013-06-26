@@ -36,7 +36,7 @@ function configure_bs() {
 
     iniset $BS_CONF_FILE DEFAULT debug True
 
-    iniset $BS_CONF_FILE central:sqlalchhemy database_connection `database_connection_url billingstack`
+    iniset $BS_CONF_FILE central:sqlalchemy database_connection `database_connection_url billingstack`
     iniset $BS_CONF_FILE rater:sqlalchemy database_connection `database_connection_url billingstack`
     iniset $BS_CONF_FILE biller:sqlalchemy database_connection `database_connection_url billingstack`
     iniset $BS_CONF_FILE collector:sqlalchemy database_connection `database_connection_url billingstack`
