@@ -51,7 +51,7 @@ function init_bs() {
     python $BS_DIR/tools/resync_storage.py --config-file $BS_CONF_FILE
     python $BS_DIR/tools/load_samples.py --config-file $BS_CONF_FILE
 
-    $BS_DIR/bin/billingstack-manage --config-file $BS_CONF_FILE pg-register
+    $BS_DIR/bin/billingstack-manage pg-register
 }
 
 
