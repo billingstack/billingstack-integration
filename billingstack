@@ -8,7 +8,12 @@ set +o xtrace
 
 # Setup directories
 BS_DIR="$DEST/billingstack"
+BS_CONF_DIR=/etc/billingstack
 
+
+BS_CONF_FILE=$BS_CONF_DIR/billingstack.conf
+BS_API_PASTE_FILE=$BS_CONF_DIR/api-paste.ini
+BS_POLICY_FILE=$BS_CONF_DIR/policy.json
 
 # Functions
 function configure_bs() {
@@ -19,15 +24,11 @@ function configure_bs() {
         setup_develop  $DEST/billingstack-$pgp
     done
 
-    BS_CONF_DIR=/etc/billingstack
+
     if [[ ! -d $BS_CONF_DIR ]]; then
         sudo mkdir $BS_CONF_DIR
     fi
     sudo chown $STACK_USER $BS_CONF_DIR
-
-    BS_CONF_FILE=$BS_CONF_DIR/billingstack.conf
-    BS_API_PASTE_FILE=$BS_CONF_DIR/api-paste.ini
-    BS_POLICY_FILE=$BS_CONF_DIR/policy.json
 
     cp $BS_DIR/etc/billingstack/billingstack.conf.sample $BS_CONF_FILE
     cp $BS_DIR/etc/billingstack/api-paste.ini.sample $BS_API_PASTE_FILE
@@ -46,10 +47,11 @@ function configure_bs() {
 
 function init_bs() {
     recreate_database billingstack utf8
-    python $BS_DIR/tools/resync_storage.py
-    python $BS_DIR/tools/load_samples.py
 
-    $BS_DIR/bin/billingstack-manage pg-register
+    python $BS_DIR/tools/resync_storage.py --config-file $BS_CONF_FILE
+    python $BS_DIR/tools/load_samples.py --config-file $BS_CONF_FILE
+
+    $BS_DIR/bin/billingstack-manage --config-file $BS_CONF_FILE pg-register
 }
 
 
@@ -64,7 +66,7 @@ function install_bs() {
 
 function start_bs() {
     export BASE_DIR=$DEST
-    export CONFIG=/etc/billingstack/billingstack.conf
+    export CONFIG=$BS_CONF_FILE
     $BS_DIR/tools/control.sh start all
 }
 
