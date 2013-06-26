@@ -63,7 +63,11 @@ GetDistro
 load_sources $TOP_DIR/stackrc $SCRIPT_DIR/stackrc
 
 
-echo "python-dev" >> $TOP_DIR/files/apts/billingstack
+cat >>$TOP_DIR/files/apts/billingstack<<EOF
+python-dev
+python-mysql
+python-psycopg2
+EOF
 
 
 # Local Settings
