@@ -12,7 +12,6 @@ BS_CONF_DIR=/etc/billingstack
 
 
 BS_CONF_FILE=$BS_CONF_DIR/billingstack.conf
-BS_API_PASTE_FILE=$BS_CONF_DIR/api-paste.ini
 BS_POLICY_FILE=$BS_CONF_DIR/policy.json
 
 # Functions
@@ -31,7 +30,6 @@ function configure_bs() {
     sudo chown $STACK_USER $BS_CONF_DIR
 
     cp $BS_DIR/etc/billingstack/billingstack.conf.sample $BS_CONF_FILE
-    cp $BS_DIR/etc/billingstack/api-paste.ini.sample $BS_API_PASTE_FILE
     cp $BS_DIR/etc/billingstack/policy.json $BS_POLICY_FILE
 
     iniset $BS_CONF_FILE DEFAULT debug True
@@ -48,7 +46,7 @@ function configure_bs() {
 function init_bs() {
     recreate_database billingstack utf8
 
-    python $BS_DIR/tools/resync_storage.py --config-file $BS_CONF_FILE
+    python $BS_DIR/tools/resync_storage.py --config-file $BS_CONF_FILE --resync
     python $BS_DIR/tools/load_samples.py --config-file $BS_CONF_FILE
 
     $BS_DIR/bin/billingstack-manage pg-register
